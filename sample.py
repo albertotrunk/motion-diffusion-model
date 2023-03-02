@@ -31,8 +31,10 @@ def main():
     is_using_data = args.input_text == '' and args.text_prompt == ''
     dist_util.setup_dist(args.device)
     if out_path == '':
-        out_path = os.path.join(os.path.dirname(args.model_path),
-                                'samples_{}_{}_seed{}'.format(name, niter, args.seed))
+        out_path = os.path.join(
+            os.path.dirname(args.model_path),
+            f'samples_{name}_{niter}_seed{args.seed}',
+        )
         if args.text_prompt != '':
             out_path += '_' + args.text_prompt.replace(' ', '_').replace('.', '')
         elif args.input_text != '':

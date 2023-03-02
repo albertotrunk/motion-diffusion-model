@@ -25,7 +25,9 @@ def parse_and_load_from_model(parser):
         if a in model_args.keys():
             args.__dict__[a] = model_args[a]
         else:
-            print('Warning: was not able to load [{}], using default value [{}] instead.'.format(a, args.__dict__[a]))
+            print(
+                f'Warning: was not able to load [{a}], using default value [{args.__dict__[a]}] instead.'
+            )
     return args
 
 

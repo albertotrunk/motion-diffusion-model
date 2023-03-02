@@ -37,7 +37,7 @@ class MDM(nn.Module):
         self.ablation = ablation
         self.activation = activation
         self.clip_dim = clip_dim
-        self.action_emb = kargs.get('action_emb', None)
+        self.action_emb = kargs.get('action_emb')
 
         self.input_feats = self.njoints * self.nfeats
 
@@ -158,10 +158,9 @@ class MDM(nn.Module):
             enc_text = self.encode_text(y['text'])
             force_mask = y.get('uncond', False)
             emb += self.embed_text(self.mask_cond(enc_text, force_mask=force_mask))
-        if 'action' in self.cond_mode:
-            if not (y['action'] == -1).any():  # FIXME - a hack so we can use already trained models
-                action_emb = self.embed_action(y['action'])
-                emb += self.mask_cond(action_emb)
+        if 'action' in self.cond_mode and not (y['action'] == -1).any():
+            action_emb = self.embed_action(y['action'])
+            emb += self.mask_cond(action_emb)
 
         if self.arch == 'gru':
             x_reshaped = x.reshape(bs, njoints*nfeats, 1, nframes)
@@ -179,10 +178,7 @@ class MDM(nn.Module):
             output = self.seqTransEncoder(xseq)[1:]  # , src_key_padding_mask=~maskseq)  # [seqlen, bs, d]
 
         elif self.arch == 'trans_dec':
-            if self.emb_trans_dec:
-                xseq = torch.cat((emb, x), axis=0)
-            else:
-                xseq = x
+            xseq = torch.cat((emb, x), axis=0) if self.emb_trans_dec else x
             xseq = self.sequence_pos_encoder(xseq)  # [seqlen+1, bs, d]
             if self.emb_trans_dec:
                 output = self.seqTransDecoder(tgt=xseq, memory=emb)[1:] # [seqlen, bs, d] # FIXME - maybe add a causal mask
@@ -325,5 +321,4 @@ class EmbedActionTensor(nn.Module):
 
     def forward(self, input):
         idx = input[:, 0].to(torch.long)  # an index array must be long
-        output = self.action_embedding[idx]
-        return output
+        return self.action_embedding[idx]
